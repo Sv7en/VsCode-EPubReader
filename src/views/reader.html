@@ -1,0 +1,150 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reader</title>
+    <link rel="stylesheet" href="@reader.css">
+    <script src="@../../lib/jquery-3.3.1.min.js"></script>
+    <script src="@../../lib/jszip.js"></script>
+    <script src="@../../lib/epub.js"></script>
+    <script src="@../webview-bridge.js"></script>
+</head>
+<body tabindex="0" style="background-color: {{ backgroundColor }}; color: {{ fontColor }};">
+    <div class="main">
+        <div id="area"></div>
+        <div class="prev-page">&lt;</div>
+        <div class="next-page">&gt;</div>
+    </div>
+    <div id="progress">{{ progress }}</div>
+<script>
+    const bookName = '{{ bookName }}';
+    const bookProgress = '{{ progress }}';
+    const cfi =  '{{ cfi }}' && '{{ cfi }}' !== 'undefined' ? '{{ cfi }}' : undefined;
+    const vscode = acquireVsCodeApi();
+    const bridge = new WebviewBridge(vscode);
+    const book = ePub('{{ bookPath }}');
+    const rendition = book.renderTo("area", {
+        width: '100%',
+        height: document.documentElement.clientHeight * .95,
+        flow: "paginated"
+    });
+    rendition.display(cfi);
+
+    rendition.themes.default({
+      body: {
+        'font-size': '{{ fontSize }}' + 'px',
+        color: '{{ fontColor }}',
+        'background-color': '{{ backgroundColor }}'
+      },
+    });
+
+    rendition.on('relocated', function(location){
+        const cfi = location.start.cfi;
+        const pct = book.locations.percentageFromCfi(cfi);
+        const progress = pct != null ? (pct * 100).toFixed(2) + '%' : bookProgress;
+        $('#progress').html(progress);
+        bridge.emit({ command: 'reader:updateProgress', book: bookName, progress, cfi });
+    });
+
+    book.ready.then(function() {
+        const locations = book.locations.generate(1600);
+        return locations;
+    });
+
+    var storedToc = [];
+    book.loaded.navigation.then(function(navigation) {
+        var chapters = navigation.toc || navigation;
+        var tocList = [];
+        chapters.forEach(function(ch) {
+            tocList.push({ label: ch.label });
+        });
+        storedToc = chapters;
+        bridge.emit({ command: 'reader:tocLoaded', toc: tocList });
+    });
+
+    function resolveHref(href) {
+        var spine = book.spine;
+        if (spine && spine.items) {
+            for (var i = 0; i < spine.items.length; i++) {
+                var s = spine.items[i];
+                if (s.href === href || s.url === href) return href;
+                if (s.href && s.href.indexOf('/' + href) !== -1) return s.href;
+            }
+        }
+        return href;
+    }
+
+    function navigateToChapter(index) {
+        var ch = storedToc[index];
+        if (!ch) return;
+        var href = resolveHref(ch.href);
+        rendition.display(href).catch(function() {
+            var base = href.split('#')[0];
+            if (base !== href) rendition.display(base).catch(function() {});
+        });
+    }
+
+    $('.prev-page').click(function() {
+        rendition.prev();
+    });
+    $('.next-page').click(function() {
+        rendition.next();
+    });
+
+    var wheelTimer = null;
+    function handleWheel(e) {
+        e.preventDefault();
+        if (wheelTimer) return;
+        wheelTimer = setTimeout(function() { wheelTimer = null; }, 300);
+        if (e.deltaY > 0) rendition.next();
+        else if (e.deltaY < 0) rendition.prev();
+    }
+    document.addEventListener('wheel', handleWheel, { passive: false });
+
+    function handleKey(e) {
+        if (e.keyCode === 65 || e.key === 'a') rendition.prev();
+        if (e.keyCode === 68 || e.key === 'd') rendition.next();
+    }
+    $(document).keydown(handleKey);
+
+    rendition.on('rendered', function() {
+        var doc = rendition.getContents()[0] && rendition.getContents()[0].document;
+        if (doc) {
+            doc.removeEventListener('keydown', handleKey);
+            doc.addEventListener('keydown', handleKey);
+            doc.removeEventListener('wheel', handleWheel);
+            doc.addEventListener('wheel', handleWheel, { passive: false });
+        }
+    });
+
+    document.body.focus();
+
+    function applyTheme(config) {
+        document.body.style.backgroundColor = config.backgroundColor;
+        document.body.style.color = config.fontColor;
+        rendition.themes.default({
+            body: {
+                'font-size': config.fontSize + 'px',
+                color: config.fontColor,
+                'background-color': config.backgroundColor
+            }
+        });
+        var loc = rendition.currentLocation();
+        var cfi = loc && loc.start && loc.start.cfi;
+        if (cfi) {
+            rendition.clear();
+            rendition.display(cfi);
+        }
+    }
+
+    window.addEventListener('message', function(event) {
+        var msg = event.data;
+        if (msg && msg.command === 'reader:updateTheme' && msg.config) {
+            applyTheme(msg.config);
+        }
+        if (msg && msg.command === 'bookshelf:gotoChapter' && msg.index != null) {
+            navigateToChapter(msg.index);
+        }
+    });
+</script>
+</html>

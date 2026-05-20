@@ -1,0 +1,222 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="@../assets/common.css">
+    <script src="@../../lib/jquery-3.3.1.min.js"></script>
+    <script src="@../webview-bridge.js"></script>
+    <style>
+        body {
+            background-color: var(--vscode-sideBar-background, #1e1e1e);
+            color: var(--vscode-sideBar-foreground, #cccccc);
+            font-size: 13px;
+        }
+        * {
+            color: inherit;
+        }
+        .section-title {
+            padding: 8px 10px 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+            font-weight: 600;
+            color: var(--vscode-sideBar-foreground, #cccccc);
+        }
+        #books {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            flex-shrink: 0;
+            max-height: 30vh;
+            overflow-y: auto;
+        }
+        #books li {
+            cursor: pointer;
+            padding: 5px 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+            border-radius: 3px;
+            margin: 1px 4px;
+            color: var(--vscode-sideBar-foreground, #cccccc);
+        }
+        #books li:hover {
+            background: var(--vscode-list-hoverBackground, rgba(255,255,255,.08));
+            color: var(--vscode-list-hoverForeground, #ffffff);
+        }
+        #toc-section {
+            flex: 1;
+            overflow-y: auto;
+            border-top: 1px solid var(--vscode-panel-border, rgba(255,255,255,.1));
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        #toc-section .section-title {
+            display: none;
+        }
+        #toc-section.visible .section-title {
+            display: block;
+        }
+        #toc {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            overflow-y: auto;
+        }
+        #toc li {
+            cursor: pointer;
+            padding: 4px 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            border-radius: 3px;
+            margin: 1px 4px;
+            opacity: .85;
+        }
+        #toc li:hover {
+            background: var(--vscode-list-hoverBackground, rgba(255,255,255,.08));
+            opacity: 1;
+        }
+        .settings-area {
+            border-top: 1px solid var(--vscode-panel-border, rgba(255,255,255,.1));
+            padding: 6px 10px 8px;
+            flex-shrink: 0;
+        }
+        .theme-preset {
+            background: rgba(255,255,255,.06);
+            color: var(--vscode-sideBar-foreground, #cccccc);
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .setting-row label {
+            flex-shrink: 0;
+            width: 68px;
+            opacity: 0.8;
+            font-size: 12px;
+            color: var(--vscode-sideBar-foreground, #cccccc);
+        }
+        .setting-row input[type="number"] {
+            width: 50px;
+        }
+        .setting-row input[type="color"] {
+            width: 28px;
+            height: 22px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body style="display:flex;flex-direction:column;height:100vh;">
+    <div class="section-title">{{ labelBookshelf }}</div>
+    <ul id="books"></ul>
+    <div id="toc-section">
+        <div class="section-title">{{ labelToc }}</div>
+        <ul id="toc"></ul>
+    </div>
+    <div class="settings-area">
+        <div class="section-title">{{ labelTheme }}</div>
+        <div class="theme-presets">
+            <span class="theme-preset" data-bg="#1e1e1e" data-fg="#6a9955"><span class="preview" style="background:#1e1e1e;color:#6a9955;">A</span>{{ themeDarkGreen }}</span>
+            <span class="theme-preset" data-bg="#ffffff" data-fg="#000000"><span class="preview" style="background:#ffffff;color:#000000;">A</span>{{ themeBright }}</span>
+            <span class="theme-preset" data-bg="#f5eddc" data-fg="#5b4636"><span class="preview" style="background:#f5eddc;color:#5b4636;">A</span>{{ themeParchment }}</span>
+            <span class="theme-preset" data-bg="#c7edcc" data-fg="#2b4c2b"><span class="preview" style="background:#c7edcc;color:#2b4c2b;">A</span>{{ themeEyeCare }}</span>
+            <span class="theme-preset" data-bg="#000000" data-fg="#888888"><span class="preview" style="background:#000000;color:#888888;">A</span>{{ themeNight }}</span>
+            <span class="theme-preset" data-bg="#e8d5b7" data-fg="#3e3b36"><span class="preview" style="background:#e8d5b7;color:#3e3b36;">A</span>{{ themeClassicYellow }}</span>
+        </div>
+        <div class="setting-row">
+            <label>{{ labelFontSize }}</label>
+            <input type="number" name="fontSize" value="{{ fontSize }}" min="10" max="40">
+        </div>
+        <div class="setting-row">
+            <label>{{ labelFontColor }}</label>
+            <input type="color" name="fontColor" value="{{ fontColor }}">
+        </div>
+        <div class="setting-row">
+            <label>{{ labelBgColor }}</label>
+            <input type="color" name="backgroundColor" value="{{ backgroundColor }}">
+        </div>
+    </div>
+<script>
+(function() {
+    const vscode = acquireVsCodeApi();
+    const bridge = new WebviewBridge(vscode);
+
+    const $books = $("#books");
+    const $toc = $("#toc");
+    const $tocSection = $("#toc-section");
+
+    function getBooks() {
+        bridge.emit({ command: 'bookshelf:getBooks' }, (res) => {
+            const books = res.data;
+            if (books) {
+                const items = books.map((item) => {
+                    return '<li>' + item + '</li>';
+                });
+                $books.html(items.join(''));
+            }
+        });
+    }
+
+    $books.on('click', 'li', function() {
+        var book = $(this).text();
+        bridge.emit({ command: 'bookshelf:openBook', book: book });
+    });
+
+    $toc.on('click', 'li', function() {
+        var index = $(this).data('index');
+        if (index != null) {
+            bridge.emit({ command: 'bookshelf:gotoChapter', index: index });
+        }
+    });
+
+    function saveConfig() {
+        var config = {
+            fontColor: $('[name=fontColor]').val(),
+            fontSize: $('[name=fontSize]').val(),
+            backgroundColor: $('[name=backgroundColor]').val(),
+        };
+        bridge.emit({ command: 'bookshelf:saveConfig', config: config });
+    }
+
+    $('input').on('change', saveConfig);
+
+    $('.theme-preset').click(function() {
+        var bg = $(this).data('bg');
+        var fg = $(this).data('fg');
+        $('[name=fontColor]').val(fg);
+        $('[name=backgroundColor]').val(bg);
+        saveConfig();
+    });
+
+    window.addEventListener('message', function(event) {
+        var msg = event.data;
+        if (msg && msg.command === 'reader:tocData' && msg.toc) {
+            $tocSection.addClass('visible');
+            var items = msg.toc.map(function(ch, i) {
+                return '<li data-index="' + i + '">' + ch.label + '</li>';
+            });
+            $toc.html(items.join(''));
+        }
+        if (msg && msg.command === 'reader:progressChanged') {
+            // 可扩展：在书架显示进度
+        }
+        if (msg && msg.command === 'reader:clearToc') {
+            $tocSection.removeClass('visible');
+            $toc.html('');
+        }
+    });
+
+    getBooks();
+}());
+</script>
+</body>
+</html>

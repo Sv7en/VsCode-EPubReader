@@ -1,0 +1,41 @@
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+.main {
+    position: relative;
+}
+.main .prev-page,
+.main .next-page {
+    position: absolute;
+    cursor: pointer;
+    top: 50%;
+    height: 200px;
+    line-height: 200px;
+    margin-top: -100px;
+    width: 100px;
+    font-size: 20px;
+    font-weight: 400;
+    padding: 2px;
+    opacity: 0;
+    transition: opacity .2s;
+}
+.main .prev-page:hover,
+.main .next-page:hover {
+    opacity: .4;
+}
+.main .prev-page {
+    left: 0;
+}
+.main .next-page {
+    right: 0;
+    text-align: right;
+}
+#progress {
+    position: fixed;
+    bottom: 6px;
+    left: 10px;
+    font-size: 12px;
+    opacity: .5;
+}

@@ -1,0 +1,12 @@
+{
+    "displayName": "EPUB 阅读器",
+    "description": "EPUB 阅读器",
+    "viewsContainers.activitybar.reader.title": "EPUB 阅读器",
+    "views.reader.bookshelf.name": "书架",
+    "command.openReader.title": "EPUB 阅读器: 打开阅读器",
+    "configuration.title": "EPUB 阅读器",
+    "configuration.fontSize.description": "阅读字体大小 (px)",
+    "configuration.fontColor.description": "阅读字体颜色 (CSS color)",
+    "configuration.backgroundColor.description": "阅读背景颜色 (CSS color)",
+    "configuration.bookDirectory.description": "自定义书籍目录路径（留空则使用插件内置 book 目录）"
+}

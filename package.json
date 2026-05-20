@@ -1,0 +1,91 @@
+{
+    "name": "reader",
+    "displayName": "%displayName%",
+    "description": "%description%",
+    "version": "1.0.0",
+    "publisher": "sv7en",
+    "icon": "icon.png",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Sv7en/VsCode-EPubReader.git"
+    },
+    "engines": {
+        "vscode": "^1.74.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onView:reader.bookshelf"
+    ],
+    "main": "./src/extension",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "reader",
+                    "title": "%viewsContainers.activitybar.reader.title%",
+                    "icon": "book.png"
+                }
+            ]
+        },
+        "views": {
+            "reader": [
+                {
+                    "id": "reader.bookshelf",
+                    "name": "%views.reader.bookshelf.name%",
+                    "type": "webview",
+                    "icon": "book.png"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "extension.openReader",
+                "title": "%command.openReader.title%"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "extension.openReader",
+                "key": "ctrl+3",
+                "mac": "cmd+3"
+            }
+        ],
+        "configuration": {
+            "title": "%configuration.title%",
+            "properties": {
+                "reader.fontSize": {
+                    "type": "number",
+                    "default": 14,
+                    "description": "%configuration.fontSize.description%"
+                },
+                "reader.fontColor": {
+                    "type": "string",
+                    "default": "#6a9955",
+                    "description": "%configuration.fontColor.description%",
+                    "format": "color"
+                },
+                "reader.backgroundColor": {
+                    "type": "string",
+                    "default": "#1e1e1e",
+                    "description": "%configuration.backgroundColor.description%",
+                    "format": "color"
+                },
+                "reader.bookDirectory": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%configuration.bookDirectory.description%"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.74.0",
+        "@types/node": "^20.0.0",
+        "@vscode/vsce": "^3.0.0"
+    }
+}

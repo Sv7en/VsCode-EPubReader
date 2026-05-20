@@ -1,0 +1,12 @@
+{
+    "displayName": "EPUB Reader",
+    "description": "EPUB Reader",
+    "viewsContainers.activitybar.reader.title": "EPUB Reader",
+    "views.reader.bookshelf.name": "Bookshelf",
+    "command.openReader.title": "EPUB Reader: Open Reader",
+    "configuration.title": "EPUB Reader",
+    "configuration.fontSize.description": "Reading font size (px)",
+    "configuration.fontColor.description": "Reading font color (CSS color)",
+    "configuration.backgroundColor.description": "Reading background color (CSS color)",
+    "configuration.bookDirectory.description": "Custom book directory path (leave empty to use built-in book folder)"
+}

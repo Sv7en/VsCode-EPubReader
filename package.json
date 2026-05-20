@@ -1,6 +1,6 @@
 {
-    "name": "vscode-epub-reader",
-    "displayName": "EPUB Reader - Sv7en",
+    "name": "epub-reader-mini",
+    "displayName": "EPUB Reader Mini",
     "description": "%description%",
     "version": "1.0.0",
     "publisher": "sv7en",

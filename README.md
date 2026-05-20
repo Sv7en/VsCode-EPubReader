@@ -6,6 +6,8 @@
 
 github: https://github.com/Sv7en/VsCode-EPubReader.git
 
+![screenshot](screenshot.png)
+
 ## 功能特性
 
 - **侧边栏书架** — 点击左侧活动栏的书本图标即可打开书架，随时浏览和打开书籍

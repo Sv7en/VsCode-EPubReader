@@ -6,6 +6,8 @@ A VS Code extension for reading EPUB books directly in the editor.
 
 github: https://github.com/Sv7en/VsCode-EPubReader.git
 
+![screenshot](screenshot.png)
+
 ## Features
 
 - **Sidebar Bookshelf** — Click the book icon in the activity bar to open the sidebar bookshelf, browse and open books anytime
